@@ -1,0 +1,29 @@
+{
+    "Role": {
+        "Path": "/",
+        "RoleName": "github-actions-cdk-deploy",
+        "RoleId": "AROA2SBFDWULVVX4WIQCV",
+        "Arn": "arn:aws:iam::725927310615:role/github-actions-cdk-deploy",
+        "CreateDate": "2026-05-10T19:44:52+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Federated": "arn:aws:iam::725927310615:oidc-provider/token.actions.githubusercontent.com"
+                    },
+                    "Action": "sts:AssumeRoleWithWebIdentity",
+                    "Condition": {
+                        "StringEquals": {
+                            "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+                        },
+                        "StringLike": {
+                            "token.actions.githubusercontent.com:sub": "repo:EngenMe/aws-portfolio-1-cicd-ops:*"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
