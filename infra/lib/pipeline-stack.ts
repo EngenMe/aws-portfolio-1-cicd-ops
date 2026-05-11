@@ -137,7 +137,7 @@ export class PipelineStack extends cdk.Stack {
                     actions: [
                         new codepipeline_actions.CodeStarConnectionsSourceAction({
                             actionName: 'GitHub_Source',
-                            owner: 'faroukhasnaoui',
+                            owner: 'EngenMe',
                             repo: 'aws-portfolio-1-cicd-ops',
                             branch: 'main',
                             connectionArn: 'arn:aws:codestar-connections:eu-west-1:725927310615:connection/ddf76c6a-441b-4f86-870d-cc2c7883129b',
