@@ -5,6 +5,7 @@
   "cpu": "256",
   "memory": "512",
   "executionRoleArn": "arn:aws:iam::725927310615:role/EcsStack-TaskExecutionRole250D2532-XtueOu9jgVe1",
+  "taskRoleArn": "arn:aws:iam::725927310615:role/EcsStack-TaskRole30FC0FBB-4Yes7ANWZrP5",
   "containerDefinitions": [
     {
       "name": "portfolio-1-app",
@@ -32,6 +33,25 @@
           "awslogs-group": "/ecs/portfolio-1-app",
           "awslogs-region": "eu-west-1",
           "awslogs-stream-prefix": "portfolio-1-app"
+        }
+      }
+    },
+    {
+      "name": "xray-daemon",
+      "image": "public.ecr.aws/xray/aws-xray-daemon:latest",
+      "essential": false,
+      "portMappings": [
+        {
+          "containerPort": 2000,
+          "protocol": "udp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/portfolio-1-app",
+          "awslogs-region": "eu-west-1",
+          "awslogs-stream-prefix": "xray-daemon"
         }
       }
     }
