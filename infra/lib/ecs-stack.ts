@@ -20,6 +20,7 @@ export class EcsStack extends cdk.Stack {
     public readonly blueTargetGroup: elbv2.ApplicationTargetGroup;
     public readonly greenTargetGroup: elbv2.ApplicationTargetGroup;
     public readonly httpsListener: elbv2.ApplicationListener;
+    public readonly alb: elbv2.ApplicationLoadBalancer;
 
     constructor(scope: Construct, id: string, props: EcsStackProps) {
         super(scope, id, props);
@@ -68,11 +69,20 @@ export class EcsStack extends cdk.Stack {
 
         props.repository.grantPull(executionRole);
 
+        // --- Task Role (runtime permissions — X-Ray, SSM, etc.) ---
+        const taskRole = new iam.Role(this, 'TaskRole', {
+            assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+            managedPolicies: [
+                iam.ManagedPolicy.fromAwsManagedPolicyName('AWSXRayDaemonWriteAccess'),
+            ],
+        });
+
         // --- Task Definition ---
         const taskDefinition = new ecs.FargateTaskDefinition(this, 'AppTaskDef', {
             memoryLimitMiB: 512,
             cpu: 256,
             executionRole,
+            taskRole,
             runtimePlatform: {
                 operatingSystemFamily: ecs.OperatingSystemFamily.LINUX,
                 cpuArchitecture: ecs.CpuArchitecture.X86_64,
@@ -162,10 +172,23 @@ export class EcsStack extends cdk.Stack {
             },
         });
 
+        // --- X-Ray Daemon Sidecar ---
+        taskDefinition.addContainer('XRayDaemon', {
+            image: ecs.ContainerImage.fromRegistry('public.ecr.aws/xray/aws-xray-daemon:latest'),
+            containerName: 'xray-daemon',
+            cpu: 32,
+            memoryLimitMiB: 256,
+            portMappings: [{ containerPort: 2000, protocol: ecs.Protocol.UDP }],
+            logging: ecs.LogDrivers.awsLogs({
+                streamPrefix: 'xray-daemon',
+                logGroup,
+            }),
+        });
+
         this.service.attachToApplicationTargetGroup(this.blueTargetGroup);
 
         // --- ALB ---
-        const alb = new elbv2.ApplicationLoadBalancer(this, 'AppAlb', {
+        this.alb = new elbv2.ApplicationLoadBalancer(this, 'AppAlb', {
             vpc,
             internetFacing: true,
             securityGroup: albSg,
@@ -176,7 +199,7 @@ export class EcsStack extends cdk.Stack {
         });
 
         // --- HTTP → HTTPS redirect ---
-        alb.addListener('HttpListener', {
+        this.alb.addListener('HttpListener', {
             port: 80,
             defaultAction: elbv2.ListenerAction.redirect({
                 protocol: 'HTTPS',
@@ -192,7 +215,7 @@ export class EcsStack extends cdk.Stack {
             'arn:aws:acm:eu-west-1:725927310615:certificate/6ffeb54e-c989-4430-b7ef-203ec9b735f8'
         );
 
-        this.httpsListener = alb.addListener('HttpsListener', {
+        this.httpsListener = this.alb.addListener('HttpsListener', {
             port: 443,
             certificates: [certificate],
             defaultAction: elbv2.ListenerAction.forward([this.blueTargetGroup]),
@@ -208,7 +231,7 @@ export class EcsStack extends cdk.Stack {
             zone: hostedZone,
             recordName: 'ops',
             target: route53.RecordTarget.fromAlias(
-                new route53targets.LoadBalancerTarget(alb)
+                new route53targets.LoadBalancerTarget(this.alb)
             ),
             ttl: cdk.Duration.seconds(60),
         });

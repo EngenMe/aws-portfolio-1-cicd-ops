@@ -9,6 +9,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 
 interface PipelineStackProps extends cdk.StackProps {
     ecrRepo: ecr.Repository;
@@ -16,6 +17,7 @@ interface PipelineStackProps extends cdk.StackProps {
     blueTargetGroup: elbv2.ApplicationTargetGroup;
     greenTargetGroup: elbv2.ApplicationTargetGroup;
     listener: elbv2.ApplicationListener;
+    rollbackAlarm: cloudwatch.IAlarm;
 }
 
 export class PipelineStack extends cdk.Stack {
@@ -118,7 +120,9 @@ export class PipelineStack extends cdk.Stack {
             autoRollback: {
                 failedDeployment: true,
                 stoppedDeployment: true,
+                deploymentInAlarm: true,
             },
+            alarms: [props.rollbackAlarm],
         });
         cdk.Tags.of(deploymentGroup).add('Project', '1');
         cdk.Tags.of(deploymentGroup).add('Environment', 'prod');
