@@ -15,6 +15,12 @@ interface EcsStackProps extends cdk.StackProps {
 }
 
 export class EcsStack extends cdk.Stack {
+    // Public exports for PipelineStack
+    public readonly service: ecs.FargateService;
+    public readonly blueTargetGroup: elbv2.ApplicationTargetGroup;
+    public readonly greenTargetGroup: elbv2.ApplicationTargetGroup;
+    public readonly httpsListener: elbv2.ApplicationListener;
+
     constructor(scope: Construct, id: string, props: EcsStackProps) {
         super(scope, id, props);
 
@@ -60,13 +66,12 @@ export class EcsStack extends cdk.Stack {
             ],
         });
 
-        // Grant ECR pull permission
         props.repository.grantPull(executionRole);
 
         // --- Task Definition ---
         const taskDefinition = new ecs.FargateTaskDefinition(this, 'AppTaskDef', {
             memoryLimitMiB: 512,
-            cpu: 256,                    // 0.25 vCPU
+            cpu: 256,
             executionRole,
             runtimePlatform: {
                 operatingSystemFamily: ecs.OperatingSystemFamily.LINUX,
@@ -104,8 +109,42 @@ export class EcsStack extends cdk.Stack {
         });
         taskSg.addIngressRule(albSg, ec2.Port.tcp(3000), 'From ALB on port 3000');
 
-        // --- ECS Service ---
-        const service = new ecs.FargateService(this, 'AppService', {
+        // --- Blue Target Group (active) ---
+        this.blueTargetGroup = new elbv2.ApplicationTargetGroup(this, 'BlueTargetGroup', {
+            vpc,
+            port: 3000,
+            protocol: elbv2.ApplicationProtocol.HTTP,
+            targetType: elbv2.TargetType.IP,
+            targetGroupName: 'portfolio-1-blue-tg',
+            healthCheck: {
+                path: '/health',
+                healthyHttpCodes: '200',
+                interval: cdk.Duration.seconds(30),
+                timeout: cdk.Duration.seconds(5),
+                healthyThresholdCount: 2,
+                unhealthyThresholdCount: 3,
+            },
+        });
+
+        // --- Green Target Group (idle — CodeDeploy shifts traffic here) ---
+        this.greenTargetGroup = new elbv2.ApplicationTargetGroup(this, 'GreenTargetGroup', {
+            vpc,
+            port: 3000,
+            protocol: elbv2.ApplicationProtocol.HTTP,
+            targetType: elbv2.TargetType.IP,
+            targetGroupName: 'portfolio-1-green-tg',
+            healthCheck: {
+                path: '/health',
+                healthyHttpCodes: '200',
+                interval: cdk.Duration.seconds(30),
+                timeout: cdk.Duration.seconds(5),
+                healthyThresholdCount: 2,
+                unhealthyThresholdCount: 3,
+            },
+        });
+
+        // --- ECS Service (attached to blue target group) ---
+        this.service = new ecs.FargateService(this, 'AppService', {
             cluster,
             taskDefinition,
             desiredCount: 1,
@@ -118,8 +157,12 @@ export class EcsStack extends cdk.Stack {
             healthCheckGracePeriod: cdk.Duration.seconds(60),
             minHealthyPercent: 100,
             maxHealthyPercent: 200,
-            circuitBreaker: { enable: true, rollback: true },
+            deploymentController: {
+                type: ecs.DeploymentControllerType.CODE_DEPLOY,
+            },
         });
+
+        this.service.attachToApplicationTargetGroup(this.blueTargetGroup);
 
         // --- ALB ---
         const alb = new elbv2.ApplicationLoadBalancer(this, 'AppAlb', {
@@ -132,25 +175,6 @@ export class EcsStack extends cdk.Stack {
             },
         });
 
-        // --- Target Group ---
-        const targetGroup = new elbv2.ApplicationTargetGroup(this, 'AppTargetGroup', {
-            vpc,
-            port: 3000,
-            protocol: elbv2.ApplicationProtocol.HTTP,
-            targetType: elbv2.TargetType.IP,
-            healthCheck: {
-                path: '/health',
-                healthyHttpCodes: '200',
-                interval: cdk.Duration.seconds(30),
-                timeout: cdk.Duration.seconds(5),
-                healthyThresholdCount: 2,
-                unhealthyThresholdCount: 3,
-            },
-        });
-
-        // Register ECS service with target group
-        service.attachToApplicationTargetGroup(targetGroup);
-
         // --- HTTP → HTTPS redirect ---
         alb.addListener('HttpListener', {
             port: 80,
@@ -161,17 +185,17 @@ export class EcsStack extends cdk.Stack {
             }),
         });
 
-        // --- HTTPS Listener ---
+        // --- HTTPS Listener (points to blue target group) ---
         const certificate = acm.Certificate.fromCertificateArn(
             this,
             'AppCertificate',
             'arn:aws:acm:eu-west-1:725927310615:certificate/6ffeb54e-c989-4430-b7ef-203ec9b735f8'
         );
 
-        alb.addListener('HttpsListener', {
+        this.httpsListener = alb.addListener('HttpsListener', {
             port: 443,
             certificates: [certificate],
-            defaultAction: elbv2.ListenerAction.forward([targetGroup]),
+            defaultAction: elbv2.ListenerAction.forward([this.blueTargetGroup]),
         });
 
         // --- Route 53 A Record ---

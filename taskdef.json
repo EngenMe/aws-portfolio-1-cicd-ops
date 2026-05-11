@@ -1,0 +1,39 @@
+{
+  "family": "EcsStackAppTaskDef2CA671A2",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::725927310615:role/EcsStack-TaskExecutionRole250D2532-SWlUpZ39b6l9",
+  "containerDefinitions": [
+    {
+      "name": "portfolio-1-app",
+      "image": "<IMAGE1_NAME>",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "AWS_REGION",
+          "value": "eu-west-1"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/portfolio-1-app",
+          "awslogs-region": "eu-west-1",
+          "awslogs-stream-prefix": "portfolio-1-app"
+        }
+      }
+    }
+  ]
+}
