@@ -28,9 +28,9 @@ phases:
       - echo Pushing Docker image to ECR...
       - docker push $ECR_URI:$IMAGE_TAG
       - docker push $ECR_URI:latest
-      - echo Writing image definitions file...
-      - printf '[{"name":"portfolio-1-app","imageUri":"%s"}]' $ECR_URI:$IMAGE_TAG > imagedefinitions.json
+      - echo Writing imageDetail.json...
+      - printf '{"ImageURI":"%s"}' $ECR_URI:$IMAGE_TAG > imageDetail.json
 
 artifacts:
   files:
-    - imagedefinitions.json
+    - imageDetail.json
