@@ -7,7 +7,7 @@ RUN npm ci
 
 COPY tsconfig.json ./
 COPY src/ ./src/
-
+ARG CACHE_BUST=1
 RUN npm run build
 RUN npm prune --omit=dev
 

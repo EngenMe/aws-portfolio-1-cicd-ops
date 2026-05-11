@@ -19,7 +19,7 @@ phases:
       - cd app && npm ci && npm test
       - echo Building Docker image...
       - cd $CODEBUILD_SRC_DIR
-      - docker build -t $ECR_REPO_NAME:$IMAGE_TAG ./app
+      - docker build --build-arg CACHE_BUST=$(date +%s) -t $ECR_REPO_NAME:$IMAGE_TAG ./app
       - docker tag $ECR_REPO_NAME:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
       - docker tag $ECR_REPO_NAME:$IMAGE_TAG $ECR_URI:latest
 
