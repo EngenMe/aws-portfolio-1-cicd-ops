@@ -4,7 +4,7 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
-  "executionRoleArn": "arn:aws:iam::725927310615:role/EcsStack-TaskExecutionRole250D2532-SWlUpZ39b6l9",
+  "executionRoleArn": "arn:aws:iam::725927310615:role/EcsStack-TaskExecutionRole250D2532-XtueOu9jgVe1",
   "containerDefinitions": [
     {
       "name": "portfolio-1-app",
