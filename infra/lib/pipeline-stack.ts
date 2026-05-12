@@ -146,6 +146,7 @@ export class PipelineStack extends cdk.Stack {
                             branch: 'main',
                             connectionArn: 'arn:aws:codestar-connections:eu-west-1:725927310615:connection/ddf76c6a-441b-4f86-870d-cc2c7883129b',
                             output: sourceOutput,
+                            triggerOnPush: true,
                         }),
                     ],
                 },
