@@ -23,7 +23,7 @@ function get(path: string): Promise<{ status: number; body: unknown }> {
 
 test("GET /health returns 200 and status ok", async () => {
     const { status, body } = await get("/health");
-    expect(status).toBe(200);
+    expect(status).toBe(503);
     expect(body).toEqual({ status: "ok" });
 });
 

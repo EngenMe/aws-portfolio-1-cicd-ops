@@ -16,7 +16,7 @@ const server = http.createServer((req, res) => {
     res.setHeader('Content-Type', 'application/json');
 
     if (req.method === 'GET' && req.url === '/health') {
-        res.writeHead(200);
+        res.writeHead(503);
         res.end(JSON.stringify({ status: 'ok' }));
         segment.close();
         return;
