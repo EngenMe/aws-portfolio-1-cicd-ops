@@ -4,6 +4,7 @@ import { EcrStack } from '../lib/ecr-stack';
 import { EcsStack } from '../lib/ecs-stack';
 import { PipelineStack } from '../lib/pipeline-stack';
 import { MonitoringStack, BillingAlarmStack } from '../lib/monitoring-stack';
+import { WafStack } from '../lib/waf-stack';
 
 const app = new cdk.App();
 
@@ -30,6 +31,14 @@ const monitoringStack = new MonitoringStack(app, 'MonitoringStack', {
     alb: ecsStack.alb,
     ecsService: ecsStack.service,
     albTargetGroup: ecsStack.blueTargetGroup,
+});
+
+new WafStack(app, 'WafStack', {
+    env: {
+        account: '725927310615',
+        region: 'eu-west-1',
+    },
+    albArn: ecsStack.alb.loadBalancerArn,
 });
 
 new PipelineStack(app, 'PipelineStack', {

@@ -172,6 +172,17 @@ export class EcsStack extends cdk.Stack {
             },
         });
 
+        // --- Auto Scaling cap: max 4 tasks to prevent runaway scaling ---
+        const scaling = this.service.autoScaleTaskCount({
+            minCapacity: 1,
+            maxCapacity: 4,
+        });
+        scaling.scaleOnCpuUtilization('CpuScaling', {
+            targetUtilizationPercent: 70,
+            scaleInCooldown: cdk.Duration.seconds(60),
+            scaleOutCooldown: cdk.Duration.seconds(60),
+        });
+
         // --- X-Ray Daemon Sidecar ---
         taskDefinition.addContainer('XRayDaemon', {
             image: ecs.ContainerImage.fromRegistry('public.ecr.aws/xray/aws-xray-daemon:latest'),
