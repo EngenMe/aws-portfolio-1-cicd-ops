@@ -1,4 +1,4 @@
-import http from "http";
+import * as http from "http";
 import server from "../src/index";
 
 const PORT = 3000;
