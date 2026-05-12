@@ -87,7 +87,8 @@ const server = http.createServer((req, res) => {
     segment.addAnnotation('path', req.url ?? '/');
 
     if (req.method === 'GET' && req.url === '/health') {
-        const acceptsHtml = req.headers['accept']?.includes('text/html') ?? false;
+        const acceptsHtml = (req.headers['accept']?.includes('text/html') ?? false) ||
+            (req.headers['user-agent']?.includes('Mozilla') ?? false);
         if (acceptsHtml) {
             res.setHeader('Content-Type', 'text/html');
             res.writeHead(200);
