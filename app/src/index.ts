@@ -2,7 +2,7 @@ import AWSXRay from 'aws-xray-sdk-core';
 import http from 'http';
 
 const PORT = 3000;
-const VERSION = process.env.APP_VERSION ?? '1.0.0';
+const VERSION = process.env.APP_VERSION ?? '1.1.0';
 const DEPLOYED_AT = new Date().toISOString();
 
 AWSXRay.setDaemonAddress('localhost:2000');
