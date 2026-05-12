@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'infra/**'
+      - '.github/workflows/deploy.yml'
 
 permissions:
   id-token: write
