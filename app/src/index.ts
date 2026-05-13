@@ -2,7 +2,7 @@ import AWSXRay from 'aws-xray-sdk-core';
 import http from 'http';
 
 const PORT = 3000;
-const VERSION = process.env.APP_VERSION ?? '1.2.0';
+const VERSION = process.env.APP_VERSION ?? '1.1.0';
 const REGION = process.env.AWS_REGION ?? 'eu-west-1';
 const DEPLOYED_AT = new Date().toISOString();
 
@@ -95,8 +95,7 @@ const server = http.createServer((req, res) => {
             res.end(healthHtml);
         } else {
             res.setHeader('Content-Type', 'application/json');
-            const forceError = process.env.FORCE_ERROR === 'true';
-            res.writeHead(forceError ? 500 : 200);
+            res.writeHead(200);
             res.end(JSON.stringify({ status: 'ok' }));
         }
         segment.close();
