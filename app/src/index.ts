@@ -2,7 +2,7 @@ import AWSXRay from 'aws-xray-sdk-core';
 import http from 'http';
 
 const PORT = 3000;
-const VERSION = process.env.APP_VERSION ?? '1.0.0';
+const VERSION = process.env.APP_VERSION ?? '1.1.0';
 const REGION = process.env.AWS_REGION ?? 'eu-west-1';
 const DEPLOYED_AT = new Date().toISOString();
 
