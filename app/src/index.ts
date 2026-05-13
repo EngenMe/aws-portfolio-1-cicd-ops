@@ -51,6 +51,10 @@ const healthHtml = `<!DOCTYPE html>
       background-clip: text;
     }
     .subtitle { color: #718096; font-size: 1rem; }
+    .description {
+      color: #a0aec0; font-size: 0.9rem; line-height: 1.7;
+      max-width: 640px; text-align: center;
+    }
     .grid {
       display: grid; grid-template-columns: repeat(2, 1fr);
       gap: 1rem; width: 100%; max-width: 640px;
@@ -90,6 +94,14 @@ const healthHtml = `<!DOCTYPE html>
 
   <h1>&#10003; Healthy</h1>
   <p class="subtitle">ops.faroukhasnaoui.tech &mdash; Project 1: CI/CD Pipeline</p>
+
+  <p class="description">
+    A production-grade CI/CD pipeline that automatically builds, tests, and deploys this app
+    on every GitHub push. CodeDeploy shifts 10% of traffic to the new version as a canary test.
+    If CloudWatch detects a spike in errors, it rolls back automatically with zero downtime.
+    Built with AWS CDK, ECS Fargate, CodePipeline, CodeBuild, CodeDeploy, CloudWatch, X-Ray, and WAF.
+    Part of a 6-project AWS Well-Architected portfolio.
+  </p>
 
   <div class="grid">
     <div class="card"><div class="card-label">Status</div><div class="card-value green">ok</div></div>
