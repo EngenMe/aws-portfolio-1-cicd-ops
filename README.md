@@ -131,7 +131,7 @@ Largest cost drivers: ALB ($0.008/LCU-hour), Fargate ($0.04048/vCPU-hour), NAT G
 
 ## Demo video
 
-🎬 [Watch the 2-minute demo on Loom](#) ← replace with your Loom URL after recording
+🎬 [Watch the 2-minute demo on Loom](https://www.loom.com/share/ae7642c083e247b19e16a83688d6b1e2)
 
 The video shows:
 1. A code push triggering the full pipeline end-to-end
