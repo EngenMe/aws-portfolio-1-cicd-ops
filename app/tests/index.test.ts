@@ -30,7 +30,7 @@ test("GET /health returns 200 and status ok", async () => {
 test("GET /version returns 200 and version field", async () => {
     const { status, body } = await get("/version");
     expect(status).toBe(200);
-    expect((body as { version: string }).version).toBe("1.1.0");
+    expect((body as { version: string }).version).toBe("1.2.0-broken");
 });
 
 test("GET /unknown returns 404", async () => {
