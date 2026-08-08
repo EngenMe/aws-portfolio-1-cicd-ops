@@ -136,7 +136,7 @@ const server = http.createServer((req, res) => {
     segment.addAnnotation('version', VERSION);
     segment.addAnnotation('path', req.url ?? '/');
 
-    if (req.method === 'GET' && (req.url === '/health' || req.url === '/')) {
+    if (req.method === 'GET' && (req.url === '/health')) {
         const acceptsHtml = (req.headers['accept']?.includes('text/html') ?? false) ||
             (req.headers['user-agent']?.includes('Mozilla') ?? false);
         if (acceptsHtml) {
