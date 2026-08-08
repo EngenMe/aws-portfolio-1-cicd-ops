@@ -136,7 +136,7 @@ const server = http.createServer((req, res) => {
     segment.addAnnotation('version', VERSION);
     segment.addAnnotation('path', req.url ?? '/');
 
-    if (req.method === 'GET' && req.url === '/health') {
+    if (req.method === 'GET' && (req.url === '/health' || req.url === '/')) {
         const acceptsHtml = (req.headers['accept']?.includes('text/html') ?? false) ||
             (req.headers['user-agent']?.includes('Mozilla') ?? false);
         if (acceptsHtml) {
@@ -209,6 +209,7 @@ const server = http.createServer((req, res) => {
     <div class="card"><div class="card-label">Status</div><div class="card-value blue">running</div></div>
   </div>
   <div class="links">
+    <a href="/">Health check</a>
     <a href="/health">Health check</a>
     <a href="/dashboard">Dashboard &rarr;</a>
   </div>
