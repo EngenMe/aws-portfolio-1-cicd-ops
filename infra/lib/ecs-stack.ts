@@ -238,6 +238,29 @@ export class EcsStack extends cdk.Stack {
             zoneName: 'faroukhasnaoui.tech',
         });
 
+        // --- Root → /health redirect ---
+        //
+        // The bare domain is only ever reached by someone trimming the URL out
+        // of curiosity; /health is the endpoint worth landing on. A listener
+        // rule rather than an app route keeps it out of the deploy cycle — this
+        // never needs a container rebuild to change.
+        //
+        // 302, not 301: browsers cache permanent redirects hard, and this
+        // should stay cheap to undo if the root ever gets a real page.
+        //
+        // Path condition '/' matches the root exactly, so every other route
+        // still falls through to the default forward action below it. The
+        // target groups health-check /health directly against the tasks, which
+        // listener rules never touch — so this cannot affect service health.
+        this.httpsListener.addAction('RootToHealth', {
+            priority: 10,
+            conditions: [elbv2.ListenerCondition.pathPatterns(['/'])],
+            action: elbv2.ListenerAction.redirect({
+                path: '/health',
+                permanent: false,
+            }),
+        });
+
         new route53.ARecord(this, 'OpsARecord', {
             zone: hostedZone,
             recordName: 'ops',
