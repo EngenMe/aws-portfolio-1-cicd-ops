@@ -33,13 +33,13 @@ const monitoringStack = new MonitoringStack(app, 'MonitoringStack', {
     albTargetGroup: ecsStack.blueTargetGroup,
 });
 
-new WafStack(app, 'WafStack', {
-    env: {
-        account: '725927310615',
-        region: 'eu-west-1',
-    },
-    albArn: ecsStack.alb.loadBalancerArn,
-});
+// new WafStack(app, 'WafStack', {
+//     env: {
+//         account: '725927310615',
+//         region: 'eu-west-1',
+//     },
+//     albArn: ecsStack.alb.loadBalancerArn,
+// });
 
 new PipelineStack(app, 'PipelineStack', {
     env: {

@@ -175,7 +175,7 @@ export class EcsStack extends cdk.Stack {
         // --- Auto Scaling cap: max 4 tasks to prevent runaway scaling ---
         const scaling = this.service.autoScaleTaskCount({
             minCapacity: 1,
-            maxCapacity: 4,
+            maxCapacity: 2,
         });
         scaling.scaleOnCpuUtilization('CpuScaling', {
             targetUtilizationPercent: 70,

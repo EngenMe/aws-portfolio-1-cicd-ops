@@ -57,7 +57,7 @@ Manual deployments introduce human error and create bottlenecks. Without observa
 | **X-Ray** | Distributed tracing — shows where request latency comes from end-to-end inside the container. |
 | **SNS** | Delivers alarm notifications to email when thresholds breach. |
 | **S3** | Stores CodePipeline build artifacts. Versioning on, 30-day lifecycle policy. |
-| **WAF** | Rate-limits inbound requests at the ALB (100 req / 5 min per IP). Blocks flood attacks before they reach ECS and trigger runaway scaling costs. |
+| **WAF** *(designed, not deployed 24/7)* | Rate-limits inbound requests at the ALB (100 req / 5 min per IP). Blocks flood attacks before they reach ECS and trigger runaway scaling costs. Built and tested (`lib/waf-stack.ts`), but not kept running continuously — see [Cost reduction tactics](#cost-reduction-tactics-applied) below. ALB traffic is still covered by AWS Shield Standard (free, automatic). |
 | **IAM** | Least-privilege roles per pipeline stage — CodeBuild can push to ECR but cannot touch Route 53; CodeDeploy can update ECS but cannot read S3 artifacts directly. |
 | **Route 53** | A-record alias pointing ops.faroukhasnaoui.tech to the ALB. Health checks feed into the CloudWatch alarm chain. |
 | **ACM** | Wildcard certificate *.faroukhasnaoui.tech covers this subdomain at no cost. Attached to the ALB HTTPS listener. |
@@ -91,41 +91,53 @@ After deploy, push any commit to `main` to trigger the full pipeline.
 
 ## How to destroy
 
-```bash
+This stack is designed to stay live continuously — `ops.faroukhasnaoui.tech`
+may be visited by a recruiter or interviewer at any time without notice, so
+it is not torn down between demos.
+
+`cdk destroy --all` remains available for full teardown if the project is
+retired or you need to rebuild from scratch:
+
+\`\`\`bash
 cd infra
 cdk destroy --all
-```
+\`\`\`
 
-Then manually clean up ECR images and the S3 artifacts bucket (CDK cannot delete non-empty buckets):
+Then manually clean up ECR images and the S3 artifacts bucket (CDK cannot
+delete non-empty buckets):
 
-```bash
-# Empty and delete ECR images
+\`\`\`bash
 aws ecr batch-delete-image \
-  --repository-name portfolio-1-app \
-  --region eu-west-1 \
-  --image-ids "$(aws ecr list-images \
-    --repository-name portfolio-1-app \
-    --region eu-west-1 \
-    --query 'imageIds[*]' \
-    --output json)"
+--repository-name portfolio-1-app \
+--region eu-west-1 \
+--image-ids "$(aws ecr list-images \
+--repository-name portfolio-1-app \
+--region eu-west-1 \
+--query 'imageIds[*]' \
+--output json)"
 
-# Empty the S3 artifacts bucket before CDK can delete it
 BUCKET=$(aws s3 ls | grep portfolio-1-artifacts | awk '{print $3}')
 aws s3 rm s3://$BUCKET --recursive
-```
+\`\`\`
 
-> Always destroy after demoing. The ALB and Fargate tasks are the largest ongoing cost drivers.
+Cost is instead managed by right-sizing what's always-on — see
+[COST.md](COST.md) for the actual trailing-month numbers and the changes
+made to bring them down.
 
 ---
 
 ## Cost estimate
 
-See [COST.md](COST.md) for the full itemised breakdown.
+See [COST.md](COST.md) for the full itemised breakdown, based on actual
+AWS Cost Explorer data rather than pre-launch estimates.
 
-**Idle/demo state:** ~$3–6/month
-**Active demo (pipeline running, traffic flowing):** ~$5–8/month
+**Actual, running continuously (Aug 2026):** ~$68/month
+**After optimization (WAF removed, autoscaling capped):** ~$52–55/month projected
 
-Largest cost drivers: ALB ($0.008/LCU-hour), Fargate ($0.04048/vCPU-hour), NAT Gateway ($0.045/hour).
+The original pre-launch estimate below this line assumed idle/demo-only
+usage and didn't account for the ALB and Fargate running 24/7 in a
+recruiter-facing project, or for autoscaling headroom. Left here for
+reference — see COST.md for what actually happened and what changed.
 
 ---
 
@@ -147,6 +159,15 @@ The video shows:
 2. **IAM role chaining across pipeline stages is the hardest part to debug** — CodeBuild's role needs ECR push permissions; CodeDeploy's role needs `ecs:UpdateService` and `iam:PassRole`; getting these wrong produces silent failures mid-pipeline that look like networking issues.
 
 3. **CDK bootstrap is region-specific** — forgetting to bootstrap `us-east-1` for stacks that reference global services caused a confusing deploy failure on the first run that took time to trace back to a missing bootstrap stack.
+
+4. **Pre-launch cost estimates assumed idle/demo-only usage — reality was 24/7.**
+   The original COST.md projected $10–15/month based on the ALB and Fargate
+   running only during active demos. Once the site needed to stay reachable
+   for unannounced visits, actual cost settled closer to $60–70/month. The
+   WAF WebACL's flat $5-6/month fee for existing, regardless of traffic, was
+   the clearest case of a feature that made sense to build and demonstrate
+   but not worth running continuously for a low-traffic portfolio site —
+   removed in favor of AWS Shield Standard (free, automatic on any ALB).
 
 ---
 
