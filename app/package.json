@@ -1,6 +1,6 @@
 {
   "name": "farouk-cicd-app",
-  "version": "0.1.1",
+  "version": "1.3.0",
   "description": "Minimal Node.js app for AWS CI/CD portfolio project",
   "main": "dist/index.js",
   "scripts": {

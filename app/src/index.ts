@@ -2,7 +2,7 @@ import AWSXRay from 'aws-xray-sdk-core';
 import http from 'http';
 
 const PORT = 3000;
-const VERSION = process.env.APP_VERSION ?? '1.2.0';
+const VERSION = process.env.APP_VERSION ?? '1.3.0';
 const REGION = process.env.AWS_REGION ?? 'eu-west-1';
 const DEPLOYED_AT = new Date().toISOString();
 const THUMBNAIL = 'https://raw.githubusercontent.com/EngenMe/aws-portfolio-1-cicd-ops/main/docs/aws-cicd-pipeline.png';
